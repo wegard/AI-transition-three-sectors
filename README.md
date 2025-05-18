@@ -22,7 +22,7 @@ The key dynamic is the **substitutability between AI capital and human labor**, 
 
 * All sectors operate under **perfect competition**.
 * **T and I** use nested CES production functions that combine traditional capital, labor, and AI capital.
-* **H** uses a standard CES function with only capital and labor—this sector is resistant to automation.
+* **H** uses a standard CES function with only capital and labor—this sector is resistant to automation (for now).
 
 ### Capital and Labor Dynamics
 
