@@ -33,9 +33,9 @@ initial_conditions = {
     "K_I_0": 3900.0,  # Intelligence capital ≈ 3.9 trillion NOK (tech, R&D, etc.)
     # Initial AI-specific capital A (subset of K):
     # Limited AI deployment in 2025: ~10% of K_T, 0% of K_H, ~25% of K_I
-    "A_T_0": 970.0,  # AI capital in T ≈ 0.97 trillion NOK (10% of K_T)
+    "A_T_0": 1455.0,  # AI capital in T ≈ 1.455 trillion NOK (15% of K_T)
     "A_H_0": 0.0,  # AI capital in H = 0 (H sector has no AI in production)
-    "A_I_0": 1000.0,  # AI capital in I ≈ 1.00 trillion NOK (25% of K_I)
+    "A_I_0": 975.0,  # AI capital in I ≈ 0.975 trillion NOK (25% of K_I)
 }
 
 # --- Economic Parameters ---
@@ -57,19 +57,19 @@ economic_params = {
 #    rho > 0 ⇒ σ>1 (substitutes)
 base_production_params = {
     "T": {  # Traditional sector (manufacturing, oil, etc.)
-        "alpha": 0.60,  # capital share in outer nest (K vs H) – higher (60%) for capital-intensive sector
+        "alpha": 0.50,  # capital share in outer nest (K vs H) – higher (60%) for capital-intensive sector
         "rho_outer": -0.20,  # substitution between K and H; negative ⇒ K and (A,L) are complements (σ_outer≈0.83)
         "rho_inner": -0.10,  # substitution between AI and labor; slightly negative ⇒ A and L are complements (σ_inner≈0.91)
         # (Low σ_inner in T reflects limited automation in 2025 – AI augments labor rather than replacing it.)
     },
     "H": {  # Human-centric sector (health, education, etc.)
-        "alpha": 0.40,  # capital share ~30% (labor share ~70%) – labor-intensive sector (minimal automation)
+        "alpha": 0.50,  # capital share ~50% (labor share ~50%) – labor-intensive sector (minimal automation)
         "phi_A_share": 0.0,  # AI share fixed 0 (no AI input in H sector)
         "rho_outer": -0.15,  # substitution between K and L in H; σ≈0.87 (mild complements)
         "rho_inner": 0.0,  # (unused since φ_A_share=0)
     },
     "I": {  # Intelligence sector (tech, ICT, R&D services)
-        "alpha": 0.30,  # capital share ~30% (moderate, since both labor and AI are important)
+        "alpha": 0.50,  # capital share ~40% (moderate, since both labor and AI are important)
         "rho_outer": -0.20,  # K vs H substitution in I; complements (σ_outer≈0.83)
         "rho_inner": 0.999,  # AI vs labor substitution; ~0.999 → σ_inner ≈ 1000 (nearly perfect substitutes)
         # (High σ_inner in I means AI can largely substitute for labor as technology advances)

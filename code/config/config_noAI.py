@@ -2,7 +2,7 @@
 # Zero AI adoption configuration for Norway
 # Inherits from base_norway and sets AI-related parameters to zero
 
-from config.config_base_norway import *
+from config.config_base import *
 
 # Dictionary to keep track of changes relative to the base config
 param_adjustments = {}
@@ -32,17 +32,7 @@ def get_adjusted_parameters():
 
 
 # --- Disable AI adoption entirely ---
-set_parameter("phi_T_max", 0.0)
-set_parameter("phi_T_init", 0.0)
-set_parameter("phi_T_k", 0.0)
-set_parameter("phi_I_max", 0.0)
-set_parameter("phi_I_init", 0.0)
-set_parameter("phi_I_k", 0.0)
-
-# No AI investment or initial AI capital
-set_parameter("economic_params.s_A", 0.0)
-set_parameter("initial_conditions.A_T_0", 0.0)
-set_parameter("initial_conditions.A_I_0", 0.0)
-set_parameter("initial_conditions.A_H_0", 0.0)
-
-print("Configuration loaded: Norway no AI adoption (extends base)")
+set_parameter("phi_T_max", 0.2)
+set_parameter("phi_T_init", 0.10)
+set_parameter("phi_I_max", 0.2)
+set_parameter("phi_I_init", 0.10)

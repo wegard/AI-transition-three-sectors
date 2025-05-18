@@ -17,7 +17,7 @@ try:
     from simulation_engine import run_single_simulation
 
     # Import the configuration file holding baseline parameters
-    import code.config.config_base as config
+    import config.config_noAI as config
 
     print("Successfully imported simulation engine and config.")
 except ImportError as e:
