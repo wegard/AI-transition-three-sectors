@@ -1,9 +1,9 @@
 #!/usr/bin/env python
-# Low variant configuration for Norway
+# High variant configuration for Norway
 # Inherits from base_norway and allows parameter adjustments
 
 # Import base configuration
-from config.config_base_norway import *
+from code.config.config_base import *
 
 # Dictionary to store parameter adjustments
 param_adjustments = {}
@@ -42,13 +42,9 @@ def get_adjusted_parameters():
     return param_adjustments
 
 
-# Parameter adjustments for low scenario:
-set_parameter("s_A", 0.05)  # Lower AI investment rate
-# set_parameter("phi_I_t0", 12)  # Later inflection point for AI adoption in Intelligence sector
-# set_parameter("phi_T_max", 0.70)  # Lower maximum AI share in Traditional sector
-# set_parameter("phi_I_max", 0.80)  # Lower maximum AI share in Intelligence sector
-# set_parameter("phi_I_k", 0.30)  # Slower adoption speed in Intelligence sector
-# set_parameter("phi_T_k", 0.20)  # Slower adoption speed in Traditional sector
-# set_parameter("economic_params.s_A", 0.10)  # Lower AI investment rate
-
-print("Configuration loaded: Norway low variant (extends base)")
+# Example usage (uncomment and modify as needed):
+set_parameter("s_A", 0.35)
+# set_parameter("phi_I_t0", 3)
+# set_parameter('phi_T_max', 0.95)  # Increase max AI share in Traditional sector
+# set_parameter('labor_mobility_params.non_movable_fraction', 0.3)  # Reduce structural immobility
+# set_parameter('economic_params.s_A', 0.25)  # Increase AI investment rate

@@ -85,5 +85,3 @@ labor_mobility_params = {
     "job_separation_rate": 0.30,  # fraction of employed becoming unemployed per year
     "wage_sensitivity": 5.0,  # responsiveness of labor flows to wage differences
 }
-
-print("Configuration loaded: Norway 2025 baseline")
