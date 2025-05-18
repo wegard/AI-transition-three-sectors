@@ -11,6 +11,7 @@ import importlib
 
 try:
     import matplotlib.pyplot as plt
+
     HAVE_MPL = True
 except ModuleNotFoundError:  # pragma: no cover - optional dependency
     HAVE_MPL = False
@@ -26,7 +27,7 @@ from simulation_engine import run_single_simulation
 
 CONFIGS = ["config_noAI", "config_base", "config_high"]
 CONFIG_MODULE_PREFIX = "config."
-OUTPUT_DIR = os.path.join("results", "main")
+OUTPUT_DIR = os.path.join("../results", "main")
 
 
 def load_config(name):
@@ -84,16 +85,28 @@ def plot_outputs(all_results):
         ax.plot(res["years"], res["Y_T"], label="Traditional")
         ax.plot(res["years"], res["Y_H"], label="Human")
         ax.plot(res["years"], res["Y_I"], label="Intelligence")
-        ax.plot(
+
+        # Create secondary axis for total output
+        ax2 = ax.twinx()
+        ax2.plot(
             res["years"], res["Y_Total"], label="Total", linestyle="--", color="black"
         )
+        if ax is axes[-1]:
+            ax2.set_ylabel("Total Output")
+
         ax.set_title(name)
         ax.set_xlabel("Year")
         if ax is axes[0]:
-            ax.set_ylabel("Output")
+            ax.set_ylabel("Sector Output")
         ax.grid(True)
-    handles, labels = axes[0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc="upper center", ncol=4)
+
+    # Primary axis legend
+    handles1, labels1 = axes[0].get_legend_handles_labels()
+    # Secondary axis legend
+    handles2, labels2 = axes[0].get_figure().axes[1].get_legend_handles_labels()
+    # Combine legends
+    fig.legend(handles1 + handles2, labels1 + labels2, loc="upper center", ncol=4)
+
     fig.tight_layout(rect=[0, 0, 1, 0.88])
     fig.savefig(os.path.join(OUTPUT_DIR, "sector_outputs.png"), dpi=300)
     plt.close(fig)
@@ -109,14 +122,26 @@ def plot_labor(all_results):
         ax.plot(res["years"], res["L_T"], label="L_T")
         ax.plot(res["years"], res["L_H"], label="L_H")
         ax.plot(res["years"], res["L_I"], label="L_I")
-        ax.plot(res["years"], res["L_U"], label="L_U")
+
+        # Create secondary axis for unemployed labor
+        ax2 = ax.twinx()
+        ax2.plot(res["years"], res["L_U"], label="L_U", color="red", linestyle="--")
+        if ax is axes[-1]:
+            ax2.set_ylabel("Unemployed Labor")
+
         ax.set_title(name)
         ax.set_xlabel("Year")
         if ax is axes[0]:
-            ax.set_ylabel("Labor units")
+            ax.set_ylabel("Employed Labor")
         ax.grid(True)
-    handles, labels = axes[0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc="upper center", ncol=4)
+
+    # Primary axis legend
+    handles1, labels1 = axes[0].get_legend_handles_labels()
+    # Secondary axis legend
+    handles2, labels2 = axes[0].get_figure().axes[1].get_legend_handles_labels()
+    # Combine legends
+    fig.legend(handles1 + handles2, labels1 + labels2, loc="upper center", ncol=4)
+
     fig.tight_layout(rect=[0, 0, 1, 0.88])
     fig.savefig(os.path.join(OUTPUT_DIR, "labor_allocation.png"), dpi=300)
     plt.close(fig)

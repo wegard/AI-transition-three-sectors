@@ -3,7 +3,7 @@
 # Inherits from base_norway and allows parameter adjustments
 
 # Import base configuration
-from code.config.config_base import *
+from config.config_base import *
 
 # Dictionary to store parameter adjustments
 param_adjustments = {}
@@ -43,8 +43,8 @@ def get_adjusted_parameters():
 
 
 # Example usage (uncomment and modify as needed):
-set_parameter("s_A", 0.35)
-# set_parameter("phi_I_t0", 3)
+# set_parameter("s_A", 0.35)
+set_parameter("phi_I_t0", 3)
 # set_parameter('phi_T_max', 0.95)  # Increase max AI share in Traditional sector
 # set_parameter('labor_mobility_params.non_movable_fraction', 0.3)  # Reduce structural immobility
 # set_parameter('economic_params.s_A', 0.25)  # Increase AI investment rate

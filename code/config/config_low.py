@@ -3,7 +3,7 @@
 # Inherits from base_norway and allows parameter adjustments
 
 # Import base configuration
-from code.config.config_base import *
+from config.config_base import *
 
 # Dictionary to store parameter adjustments
 param_adjustments = {}
