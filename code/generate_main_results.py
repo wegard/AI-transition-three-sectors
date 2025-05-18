@@ -9,8 +9,18 @@ and wage differentials. Output is saved in ``results/main``.
 import os
 import importlib
 
-import matplotlib.pyplot as plt
-import numpy as np
+try:
+    import matplotlib.pyplot as plt
+    HAVE_MPL = True
+except ModuleNotFoundError:  # pragma: no cover - optional dependency
+    HAVE_MPL = False
+    plt = None
+try:
+    import numpy as np
+except ModuleNotFoundError as exc:  # pragma: no cover - required dependency
+    raise SystemExit(
+        "This script requires NumPy. Please install it with 'pip install numpy'."
+    ) from exc
 
 from simulation_engine import run_single_simulation
 
@@ -57,7 +67,18 @@ def ensure_output_dir():
         os.makedirs(OUTPUT_DIR)
 
 
+def save_results(all_results):
+    """Save each scenario's results to compressed NumPy files."""
+    for name, res in all_results.items():
+        path = os.path.join(OUTPUT_DIR, f"{name}_results.npz")
+        np.savez(path, **res)
+
+
 def plot_outputs(all_results):
+    if not HAVE_MPL:
+        print("Matplotlib not available, skipping output plots.")
+        return
+
     fig, axes = plt.subplots(1, 3, figsize=(15, 4), sharey=True)
     for ax, (name, res) in zip(axes, all_results.items()):
         ax.plot(res["years"], res["Y_T"], label="Traditional")
@@ -79,6 +100,10 @@ def plot_outputs(all_results):
 
 
 def plot_labor(all_results):
+    if not HAVE_MPL:
+        print("Matplotlib not available, skipping labor allocation plots.")
+        return
+
     fig, axes = plt.subplots(1, 3, figsize=(15, 4), sharey=True)
     for ax, (name, res) in zip(axes, all_results.items()):
         ax.plot(res["years"], res["L_T"], label="L_T")
@@ -98,6 +123,10 @@ def plot_labor(all_results):
 
 
 def plot_wage_diffs(all_results):
+    if not HAVE_MPL:
+        print("Matplotlib not available, skipping wage differential plots.")
+        return
+
     fig, axes = plt.subplots(1, 3, figsize=(15, 4), sharey=True)
     for ax, (name, res) in zip(axes, all_results.items()):
         w_T = res["MPL_T"]
@@ -123,10 +152,15 @@ def plot_wage_diffs(all_results):
 
 
 def main():
-    plt.style.use("seaborn-v0_8-whitegrid")
+    if HAVE_MPL:
+        plt.style.use("seaborn-v0_8-whitegrid")
+    else:
+        print("Matplotlib not installed; skipping all plots.")
+
     ensure_output_dir()
     all_results = {name: run_scenario(name) for name in CONFIGS}
 
+    save_results(all_results)
     plot_outputs(all_results)
     plot_labor(all_results)
     plot_wage_diffs(all_results)
