@@ -66,10 +66,9 @@ Investment and labor allocation decisions are responsive to marginal products an
 
 ```text
 .
-├── model.py          # Core simulation code
-├── parameters.yaml   # Model parameters
+├── code/             # Code
 ├── results/          # Output from simulations
-├── plots/            # Generated figures
+├── docs/             # Documentation
 └── README.md         # Model overview (this file)
 ```
 
