@@ -175,3 +175,10 @@ cython_debug/
 
 # Results
 results/
+
+# LaTeX
+*.aux
+*.log
+*.out
+*.pdf
+*.toc

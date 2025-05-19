@@ -1,0 +1,166 @@
+\documentclass{article}
+
+% Standard Packages
+\usepackage[utf8]{inputenc} % Specify input encoding
+\usepackage{amsmath}        % For advanced math typesetting (e.g., align environment)
+\usepackage{amssymb}        % For math symbols
+\usepackage{amsfonts}       % For math fonts
+\usepackage{geometry}       % For page layout customization
+\geometry{a4paper, margin=1in} % Set page size to A4 and margins to 1 inch
+
+% Custom commands from the document
+% \sector command is used for denoting economic sectors like T, H, I.
+% \textnormal ensures upright text, suitable for use in math mode.
+\newcommand{\sector}[1]{\textnormal{#1}}
+
+\begin{document}
+
+
+\section{Model: A Three-Sector Framework with Evolving Automation}
+\label{sec:model}
+We develop a discrete-time model with three sectors to analyze the economic transition towards near-Artificial General Intelligence (AGI). 
+The economy consists of a Traditional sector ($\sector{T}$), a Human-centric sector ($\sector{H}$), and an Intelligence sector ($\sector{I}$). 
+The key dynamic element is the evolving substitutability between AI capital and human labor, particularly in the Traditional and Intelligence sectors, driven by technological progress. 
+Time is indexed by $t=0, 1, 2, \dots$.
+
+\subsection{Economic Environment and Factors of Production}
+The economy is populated by a representative household that supplies a fixed total amount of labor $L$ inelastically. 
+There are three types of inputs: traditional physical capital ($K$), AI-specific capital ($A$), and labor ($L$). 
+Both types of capital are accumulated through investment and depreciate over time. 
+Labor can be allocated across the three production sectors or remain unemployed ($U$). 
+We denote the allocation of labor at time $t$ as $L_{j,t}$ for sector $j \in \{\sector{T}, \sector{H}, \sector{I}\}$ and $L_{U,t}$ for unemployment, such that $L_{\sector{T},t} + L_{\sector{H},t} + L_{\sector{I},t} + L_{U,t} = L$. 
+Similarly, capital stocks are sector-specific: $K_{j,t}$ and $A_{j,t}$ (where applicable).
+
+\subsection{Production Technologies}
+Each sector $j \in \{\sector{T}, \sector{H}, \sector{I}\}$ produces a homogeneous final good using sector-specific production technologies. 
+We assume perfect competition in all markets, implying factors are paid their marginal products.
+Total output in the economy is $Y_t = Y_{\sector{T},t} + Y_{\sector{H},t} + Y_{\sector{I},t}$.
+
+\subsubsection{Traditional Sector (T)}
+Output in the Traditional sector, $Y_{\sector{T},t}$, is produced using traditional capital $K_{\sector{T},t}$, AI capital $A_{\sector{T},t}$, and labor $L_{\sector{T},t}$ via a nested Constant Elasticity of Substitution (CES) function. 
+The outer nest combines traditional capital with an aggregate of AI capital and labor, $H_{\sector{T},t}$. 
+The inner nest combines AI capital and labor to form this aggregate.
+\begin{align}
+Y_{\sector{T},t} &= \left[ \alpha_{\sector{T}} (K_{\sector{T},t})^{\hat{\rho}_{\sector{T}}} + (1-\alpha_{\sector{T}}) (H_{\sector{T},t})^{\hat{\rho}_{\sector{T}}} \right]^{1/\hat{\rho}_{\sector{T}}} \label{eq:prod_T_outer} \\
+H_{\sector{T},t} &= \left[ \phi_{\sector{T},t} (A_{\sector{T},t})^{\rho_{\sector{T}}} + (1-\phi_{\sector{T},t}) (L_{\sector{T},t})^{\rho_{\sector{T}}} \right]^{1/\rho_{\sector{T}}} \label{eq:prod_T_inner}
+\end{align}
+Here, $\alpha_{\sector{T}} \in (0,1)$ is the share parameter for traditional capital in the outer nest. 
+The parameter $\phi_{\sector{T},t} \in [0,1]$ is the time-varying share parameter for AI capital in the inner nest, capturing the evolving technological frontier and potential for automation. 
+$\hat{\rho}_{\sector{T}} \leq 1$ and $\rho_{\sector{T}} \leq 1$ govern the elasticity of substitution in the outer and inner nests, respectively. 
+The elasticity of substitution between $K_{\sector{T}}$ and $H_{\sector{T}}$ is $\hat{\sigma}_{\sector{T}} = 1/(1-\hat{\rho}_{\sector{T}})$, and between $A_{\sector{T}}$ and $L_{\sector{T}}$ is $\sigma_{\sector{T}} = 1/(1-\rho_{\sector{T}})$. 
+A higher $\sigma_{\sector{T}}$ implies greater substitutability between AI and labor within this sector.
+
+\subsubsection{Human Sector (H)}
+The Human sector produces output $Y_{\sector{H},t}$ using traditional capital $K_{\sector{H},t}$ and labor $L_{\sector{H},t}$. 
+Tasks in this sector are assumed to be inherently difficult or undesirable to automate, reflecting human-specific capabilities. 
+We model this with a standard CES production function that does not include AI capital as a direct input:
+\begin{equation}
+Y_{\sector{H},t} = \left[ \alpha_{\sector{H}} (K_{\sector{H},t})^{\rho_{\sector{H}}} + (1-\alpha_{\sector{H}}) (L_{\sector{H},t})^{\rho_{\sector{H}}} \right]^{1/\rho_{\sector{H}}} \label{eq:prod_H}
+\end{equation}
+where $\alpha_{\sector{H}} \in (0,1)$ is the capital share parameter, and $\rho_{\sector{H}} \leq 1$ determines the elasticity of substitution $\sigma_{\sector{H}} = 1/(1-\rho_{\sector{H}})$ between capital and labor in this sector.
+
+\subsubsection{Intelligence Sector (I)}
+Output in the Intelligence sector, $Y_{\sector{I},t}$, is produced using traditional capital $K_{\sector{I},t}$ (representing infrastructure like servers and buildings), AI capital $A_{\sector{I},t}$ (representing models, software, compute), and labor $L_{\sector{I},t}$ (representing tasks like programming, data analysis). 
+Similar to the Traditional sector, we use a nested CES structure:
+\begin{align}
+Y_{\sector{I},t} &= \left[ \alpha_{\sector{I}} (K_{\sector{I},t})^{\hat{\rho}_{\sector{I}}} + (1-\alpha_{\sector{I}}) (H_{\sector{I},t})^{\hat{\rho}_{\sector{I}}} \right]^{1/\hat{\rho}_{\sector{I}}} \label{eq:prod_I_outer} \\
+H_{\sector{I},t} &= \left[ \phi_{\sector{I},t} (A_{\sector{I},t})^{\rho_{\sector{I}}} + (1-\phi_{\sector{I},t}) (L_{\sector{I},t})^{\rho_{\sector{I}}} \right]^{1/\rho_{\sector{I}}} \label{eq:prod_I_inner}
+\end{align}
+The parameters $\alpha_{\sector{I}}$, $\phi_{\sector{I},t}$, $\hat{\rho}_{\sector{I}}$, and $\rho_{\sector{I}}$ are defined analogously to those in the Traditional sector, with $\phi_{\sector{I},t}$ also evolving over time. 
+The corresponding elasticities are $\hat{\sigma}_{\sector{I}} = 1/(1-\hat{\rho}_{\sector{I}})$ and $\sigma_{\sector{I}} = 1/(1-\rho_{\sector{I}})$. 
+We will assume that labor and AI is substitutes in the Intelligence sector, so $\sigma_{\sector{I}} > \sigma_{\sector{T}}$.
+
+\subsection{Factor Payments}
+Factors of production are mobile across sectors (subject to frictions for labor) and are paid their marginal products. 
+Let $w_{j,t}$, $r_{K,j,t}$, and $r_{A,j,t}$ denote the wage rate, the rental rate of traditional capital, and the rental rate of AI capital in sector $j$ at time $t$, respectively.
+\begin{align}
+w_{j,t} &= \frac{\partial Y_{j,t}}{\partial L_{j,t}} \quad \text{for } j \in \{\sector{T}, \sector{H}, \sector{I}\} \label{eq:wage} \\
+r_{K,j,t} &= \frac{\partial Y_{j,t}}{\partial K_{j,t}} \quad \text{for } j \in \{\sector{T}, \sector{H}, \sector{I}\} \label{eq:rental_K} \\
+r_{A,j,t} &= \frac{\partial Y_{j,t}}{\partial A_{j,t}} \quad \text{for } j \in \{\sector{T}, \sector{I}\} \quad (\text{Note: } r_{A,\sector{H},t} = 0 \text{ by assumption}) \label{eq:rental_A}
+\end{align}
+The marginal products are derived from the production functions (\ref{eq:prod_T_outer})-(\ref{eq:prod_I_inner}). 
+For the nested structures ($\sector{T}$ and $\sector{I}$), the chain rule applies. 
+For example, the marginal product of labor in sector $\sector{T}$ is:
+\begin{equation}
+\frac{\partial Y_{\sector{T},t}}{\partial L_{\sector{T},t}} = \frac{\partial Y_{\sector{T},t}}{\partial H_{\sector{T},t}} \cdot \frac{\partial H_{\sector{T},t}}{\partial L_{\sector{T},t}}
+\end{equation}
+where
+\begin{align}
+\frac{\partial Y_{\sector{T},t}}{\partial H_{\sector{T},t}} &= (1-\alpha_{\sector{T}}) \left( \frac{Y_{\sector{T},t}}{H_{\sector{T},t}} \right)^{1-\hat{\rho}_{\sector{T}}} \\
+\frac{\partial H_{\sector{T},t}}{\partial L_{\sector{T},t}} &= (1-\phi_{\sector{T},t}) \left( \frac{H_{\sector{T},t}}{L_{\sector{T},t}} \right)^{1-\rho_{\sector{T}}}
+\end{align}
+Similar expressions hold for $\partial Y_{j,t}/\partial K_{j,t}$ and $\partial Y_{j,t}/\partial A_{j,t}$ using the appropriate derivatives of the CES functions.\footnote{We assume standard CES derivative forms, handling edge cases (e.g., $\rho \to 0$ for Cobb-Douglas, $\rho \to 1$ for linear) as implemented in the corresponding simulation code.}
+
+\subsection{Capital Accumulation and Investment Allocation}
+Aggregate output in the economy is $Y_t = Y_{\sector{T},t} + Y_{\sector{H},t} + Y_{\sector{I},t}$. 
+A constant fraction $s_K$ of aggregate output is saved and invested in traditional capital, and a fraction $s_A$ is invested in AI capital. 
+Total investment funds are $Inv_{K,t} = s_K Y_t$ and $Inv_{A,t} = s_A Y_t$.
+
+These aggregate investment funds are allocated across sectors based on the relative marginal productivities of capital. 
+Investment flows to sectors offering higher returns, moderated by a sensitivity parameter $\eta \geq 0$.
+\begin{align}
+I_{K,j,t} &= Inv_{K,t} \cdot \frac{ \max(0, r_{K,j,t})^\eta }{ \sum_{k \in \{\sector{T,H,I}\}} \max(0, r_{K,k,t})^\eta } \quad \text{for } j \in \{\sector{T}, \sector{H}, \sector{I}\} \label{eq:inv_alloc_K} \\
+I_{A,j,t} &= Inv_{A,t} \cdot \frac{ \max(0, r_{A,j,t})^\eta }{ \sum_{k \in \{\sector{T,I}\}} \max(0, r_{A,k,t})^\eta } \quad \text{for } j \in \{\sector{T}, \sector{I}\} \label{eq:inv_alloc_A}
+\end{align}
+If the denominator is zero (e.g., all relevant marginal products are non-positive), investment allocation is zero or determined by an alternative rule (e.g., equal shares). We set $I_{A,\sector{H},t} = 0$.
+
+Capital stocks evolve according to the standard law of motion, with depreciation rates $\delta_K$ and $\delta_A$:
+\begin{align}
+K_{j,t+1} &= (1 - \delta_K) K_{j,t} + I_{K,j,t} \quad \text{for } j \in \{\sector{T}, \sector{H}, \sector{I}\} \label{eq:k_accum} \\
+A_{j,t+1} &= (1 - \delta_A) A_{j,t} + I_{A,j,t} \quad \text{for } j \in \{\sector{T}, \sector{I}\} \label{eq:a_accum}
+\end{align}
+
+\subsection{Labor Market Dynamics}
+Labor allocation evolves based on wage differentials and labor market frictions. 
+The total labor force $L$ is constant. 
+The dynamics involve flows between employment in sectors $\sector{T}$, $\sector{H}$, $\sector{I}$, and unemployment $\sector{U}$.
+
+\noindent
+\textbf{Job Separation:} A fraction $\lambda_s \in [0,1]$ of workers employed in each sector $j$ exogenously separates into unemployment: $S_{j,t} = \lambda_s L_{j,t}$.
+
+\noindent
+\textbf{Hiring from Unemployment:} Unemployed workers find jobs based on available vacancies, implicitly driven by sector wages. 
+A fraction $\lambda_f \in [0,1]$ of the unemployment pool $L_{U,t}$ finds jobs in period $t$. 
+The total number of hires from unemployment is $H_{U,t} = \lambda_f L_{U,t}$. 
+These hires are allocated across sectors $j \in \{\sector{T,H,I}\}$ proportionally to their relative wage attractiveness, governed by a sensitivity parameter $\xi \geq 0$:
+\begin{equation}
+    H_{j,t} = H_{U,t} \cdot \frac{ \max(0, w_{j,t})^\xi }{ \sum_{k \in \{\sector{T,H,I}\}} \max(0, w_{k,t})^\xi } \label{eq:labor_hire}
+\end{equation}
+If the denominator is zero, hires are allocated according to an alternative rule.
+
+\noindent
+\textbf{Inter-Sectoral Mobility:} Employed workers may switch sectors seeking higher wages. 
+We assume a fraction $\chi \in [0,1]$ of workers are immobile. 
+The remaining fraction $(1-\chi)$ can potentially move. 
+The net flow between sectors depends on wage differentials $(w_{k,t} - w_{j,t})$ and is scaled by a mobility factor $\mu \in [0,1]$ reflecting adjustment costs or search frictions. 
+Sectors with higher relative wages attract workers from sectors with lower relative wages, subject to the availability of mobile workers in the source sector and the overall friction captured by $\mu$. 
+Let $M_{k \to j, t}$ denote the flow of mobile workers from sector $k$ to sector $j$. 
+This flow is increasing in $w_{j,t}$ relative to $w_{k,t}$ and constrained by $(1-\chi)L_{k,t}$ and $\mu$. 
+The exact functional form follows the implementation in the simulation code, capturing limited arbitrage across sectors.
+
+The labor stock in each sector evolves according to:
+\begin{equation}
+L_{j,t+1} = L_{j,t} - S_{j,t} + H_{j,t} + \sum_{k \neq j} (M_{k \to j, t} - M_{j \to k, t}) \quad \text{for } j \in \{\sector{T}, \sector{H}, \sector{I}\} \label{eq:labor_accum_j}
+\end{equation}
+The unemployment stock evolves as:
+\begin{equation}
+L_{U,t+1} = L_{U,t} + \sum_{j \in \{\sector{T,H,I}\}} S_{j,t} - H_{U,t} \label{eq:labor_accum_U}
+\end{equation}
+The dynamics ensure labor conservation: $\sum_{j \in \{\sector{T,H,I}\}} L_{j,t+1} + L_{U,t+1} = L$.
+
+\subsection{Evolution of Technology: The Automation Parameter \texorpdfstring{$\phi_t$}{phi\_t}}
+A key driver of the model dynamics is the exogenous evolution of the AI share parameters, $\phi_{\sector{T},t}$ and $\phi_{\sector{I},t}$, which capture the increasing capability and cost-effectiveness of AI technology in substituting for or complementing labor in the Traditional and Intelligence sectors. 
+We assume these parameters follow a logistic (S-curve) path over time, representing an initial phase of slow adoption, followed by rapid advancement, and eventually saturation near a maximum potential level. 
+For $j \in \{\sector{T}, \sector{I}\}$:
+\begin{equation}
+\phi_{j,t} = \phi_{j,\text{min}} + \frac{\phi_{j,\text{max}} - \phi_{j,\text{min}}}{1 + e^{-\gamma_j (t - t_{0,j})}} \label{eq:phi_evolution}
+\end{equation}
+where $\phi_{j,\text{min}}$ is the initial share, $\phi_{j,\text{max}} \in (\phi_{j,\text{min}}, 1]$ is the maximum potential AI share, $\gamma_j > 0$ controls the speed of transition, and $t_{0,j}$ is the midpoint of the transition phase for sector $j$. 
+This exogenous path reflects the anticipated trajectory towards near-AGI. The parameter $\phi_{\sector{H},t}$ for the Human sector is implicitly fixed at 0.
+
+\subsection{Model Summary}
+The model describes the evolution of capital stocks ($K_j, A_j$) and labor allocations ($L_j, L_U$) across three sectors, driven by investment decisions based on marginal returns and labor flows influenced by wage differentials and frictions. 
+The core dynamic is the changing nature of production, particularly in the $\sector{T}$ and $\sector{I}$ sectors, due to the S-curve evolution of the AI technology parameter $\phi_t$. 
+The interplay between technology adoption ($\phi_t$), capital-labor/AI-labor substitutability ($\rho$'s), investment ($s_K, s_A, \eta$), and labor market frictions ($\lambda_s, \lambda_f, \chi, \mu, \xi$) determines the path of output, wages, and employment structure as the economy approaches a state of near-AGI.
+
+\end{document}
