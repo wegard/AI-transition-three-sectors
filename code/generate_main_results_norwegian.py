@@ -82,9 +82,9 @@ def plot_outputs(all_results):
 
     fig, axes = plt.subplots(1, 3, figsize=(15, 4), sharey=True)
     for ax, (name, res) in zip(axes, all_results.items()):
-        ax.plot(res["years"], res["Y_T"], label="Traditional")
-        ax.plot(res["years"], res["Y_H"], label="Human")
-        ax.plot(res["years"], res["Y_I"], label="Intelligence")
+        ax.plot(res["years"], res["Y_T"], label="Tradisjonell")
+        ax.plot(res["years"], res["Y_H"], label="Menneskelig")
+        ax.plot(res["years"], res["Y_I"], label="Intelligens")
 
         # Create secondary axis for total output
         ax2 = ax.twinx()
@@ -92,12 +92,12 @@ def plot_outputs(all_results):
             res["years"], res["Y_Total"], label="Total", linestyle="--", color="black"
         )
         if ax is axes[-1]:
-            ax2.set_ylabel("Total Output")
+            ax2.set_ylabel("Total produksjon")
 
         ax.set_title(name)
-        ax.set_xlabel("Year")
+        ax.set_xlabel("År")
         if ax is axes[0]:
-            ax.set_ylabel("Sector Output")
+            ax.set_ylabel("Sektorproduksjon")
         ax.grid(True)
 
     # Primary axis legend
@@ -127,12 +127,12 @@ def plot_labor(all_results):
         ax2 = ax.twinx()
         ax2.plot(res["years"], res["L_U"], label="L_U", color="red", linestyle="--")
         if ax is axes[-1]:
-            ax2.set_ylabel("Unemployed Labor")
+            ax2.set_ylabel("Arbeidsledige")
 
         ax.set_title(name)
-        ax.set_xlabel("Year")
+        ax.set_xlabel("År")
         if ax is axes[0]:
-            ax.set_ylabel("Employed Labor")
+            ax.set_ylabel("Sysselsatte")
         ax.grid(True)
 
     # Primary axis legend
@@ -165,9 +165,9 @@ def plot_wage_diffs(all_results):
         ax.plot(res["years"], res["MPL_H"] / w_T, label="w_H / w_T")
         ax.plot(res["years"], res["MPL_I"] / w_T, label="w_I / w_T")
         ax.set_title(name)
-        ax.set_xlabel("Year")
+        ax.set_xlabel("År")
         if ax is axes[0]:
-            ax.set_ylabel("Relative wage")
+            ax.set_ylabel("Relativ lønn")
         ax.grid(True)
     handles, labels = axes[0].get_legend_handles_labels()
     fig.legend(handles, labels, loc="upper center", ncol=3)
@@ -208,16 +208,16 @@ def plot_s_curves():
             "-",
             color="forestgreen",
             linewidth=3,
-            label="φ_T (Traditional)",
+            label="φ_T (Tradisjonell)",
         )
         axes[col].plot(
-            years, phi_I, "--", color="navy", linewidth=3, label="φ_I (Intelligence)"
+            years, phi_I, "--", color="navy", linewidth=3, label="φ_I (Intelligens)"
         )
 
         # axes[col].set_title(f"{cfg_name}")
-        axes[col].set_xlabel("Year")
+        axes[col].set_xlabel("År")
         if col == 0:
-            axes[col].set_ylabel("Automation Level")
+            axes[col].set_ylabel("Automatiseringsnivå")
         axes[col].grid(True)
         axes[col].set_ylim(0, 1)
         axes[col].legend()

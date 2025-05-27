@@ -32,7 +32,7 @@ def get_adjusted_parameters():
 
 
 # --- Disable AI adoption entirely ---
-set_parameter("phi_T_max", 0.2)
-set_parameter("phi_T_init", 0.10)
-set_parameter("phi_I_max", 0.2)
-set_parameter("phi_I_init", 0.10)
+set_parameter("phi_T_max", 0.05)
+set_parameter("phi_T_init", 0.05)
+set_parameter("phi_I_max", 0.15)
+set_parameter("phi_I_init", 0.15)

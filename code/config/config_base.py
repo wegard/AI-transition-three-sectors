@@ -1,21 +1,21 @@
 # Calibration for Norway 2025 (Three-Sector Model)
 
 # --- Simulation Settings ---
-T_sim = 12  # simulate 12 years (2025–2037)
+T_sim = 20  # simulate 15 years (2025–2040)
 L_total = 3000000.0  # total labor force ≈ 3.0 million in 2025
 
 # --- AI Adoption (S-curve) Parameters ---
 # Logistic adoption curves for AI share (phi) in Traditional and Intelligence sectors.
 # phi(t) = phi_init + (phi_max - phi_init) / (1 + exp[-k*(t - t0)])
-phi_T_max = 0.99  # max AI share in T (90% long-run automation potential)
-phi_T_k = 0.80  # S-curve steepness for T (moderate adoption speed)
+phi_T_max = 0.6  # max AI share in T (80% long-run automation potential)
+phi_T_k = 0.40  # S-curve steepness for T (moderate adoption speed)
 phi_T_t0 = 10  # inflection point year for T
-phi_T_init = 0.1  # initial AI share in T (15% in 2025)
+phi_T_init = 0.05  # initial AI share in T (5% in 2025)
 
-phi_I_max = 0.99  # max AI share in I (95% potential)
-phi_I_k = 0.80  # S-curve steepness for I (faster adoption)
-phi_I_t0 = 10  # inflection point year for I
-phi_I_init = 0.1  # initial AI share in I (15% in 2025)
+phi_I_max = 0.95  # max AI share in I (95% potential)
+phi_I_k = 0.90  # S-curve steepness for I (faster adoption)
+phi_I_t0 = 5  # inflection point year for I
+phi_I_init = 0.15  # initial AI share in I (15% in 2025)
 
 # (Human-centric sector H has no direct AI input, φ_H = 0 by assumption.)
 
@@ -57,21 +57,21 @@ economic_params = {
 #    rho > 0 ⇒ σ>1 (substitutes)
 base_production_params = {
     "T": {  # Traditional sector (manufacturing, oil, etc.)
-        "alpha": 0.50,  # capital share in outer nest (K vs H) – higher (60%) for capital-intensive sector
-        "rho_outer": -0.20,  # substitution between K and H; negative ⇒ K and (A,L) are complements (σ_outer≈0.83)
-        "rho_inner": -0.10,  # substitution between AI and labor; slightly negative ⇒ A and L are complements (σ_inner≈0.91)
+        "alpha": 0.60,  # capital share in outer nest (K vs H) – higher (60%) for capital-intensive sector
+        "rho_outer": -0.10,  # substitution between K and H; negative ⇒ K and (A,L) are complements
+        "rho_inner": -0.20,  # substitution between AI and labor; slightly negative ⇒ A and L are complements
         # (Low σ_inner in T reflects limited automation in 2025 – AI augments labor rather than replacing it.)
     },
     "H": {  # Human-centric sector (health, education, etc.)
         "alpha": 0.50,  # capital share ~50% (labor share ~50%) – labor-intensive sector (minimal automation)
         "phi_A_share": 0.0,  # AI share fixed 0 (no AI input in H sector)
-        "rho_outer": -0.15,  # substitution between K and L in H; σ≈0.87 (mild complements)
+        "rho_outer": -0.1,  # substitution between K and L in H; σ≈0.87 (mild complements)
         "rho_inner": 0.0,  # (unused since φ_A_share=0)
     },
     "I": {  # Intelligence sector (tech, ICT, R&D services)
-        "alpha": 0.50,  # capital share ~40% (moderate, since both labor and AI are important)
-        "rho_outer": -0.20,  # K vs H substitution in I; complements (σ_outer≈0.83)
-        "rho_inner": 0.999,  # AI vs labor substitution; ~0.999 → σ_inner ≈ 1000 (nearly perfect substitutes)
+        "alpha": 0.40,  # capital share ~40% (moderate, since both labor and AI are important)
+        "rho_outer": -0.1,  # K vs H substitution in I; complements
+        "rho_inner": 0.95,  # AI vs labor substitution;
         # (High σ_inner in I means AI can largely substitute for labor as technology advances)
     },
 }

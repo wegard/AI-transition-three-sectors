@@ -901,6 +901,405 @@ def run_parameter_experiment(
     return all_results
 
 
+def run_reallocation_experiment(
+    variable_type,
+    target_sector,
+    reallocation_fractions,
+    experiment_name="default_reallocation",
+    do_plots=True,
+):
+    """
+    Runs a simulation experiment by reallocating a variable (K, L, or A) from other sectors
+    to a target sector while keeping the total constant. This allows studying the effects
+    of resource reallocation rather than absolute changes.
+
+    Args:
+        variable_type (str): Type of variable to reallocate ('K', 'L', or 'A')
+        target_sector (str): Sector to increase ('T', 'H', or 'I')
+        reallocation_fractions (list or np.array): Fractions of total to allocate to target sector
+                                                   (e.g., [0.3, 0.4, 0.5] means target gets 30%, 40%, 50% of total)
+        experiment_name (str): Descriptive name for this experiment
+        do_plots (bool): Whether to generate plots
+
+    Returns:
+        dict: Dictionary containing simulation results for baseline and all reallocation scenarios
+    """
+    # --- Define Main Output Directory ---
+    main_output_dir = "../results/experiments"
+
+    # --- Input Validation ---
+    if variable_type not in ["K", "L", "A"]:
+        print("Error: variable_type must be 'K', 'L', or 'A'")
+        return None
+
+    if target_sector not in ["T", "H", "I"]:
+        print("Error: target_sector must be 'T', 'H', or 'I'")
+        return None
+
+    if (
+        not isinstance(reallocation_fractions, Iterable)
+        or isinstance(reallocation_fractions, str)
+        or len(reallocation_fractions) == 0
+    ):
+        print("Error: reallocation_fractions must be a non-empty list or numpy array.")
+        return None
+
+    if not isinstance(experiment_name, str) or not experiment_name:
+        print("Error: experiment_name must be a non-empty string.")
+        return None
+
+    # Sanitize experiment name
+    safe_experiment_name = re.sub(r"[^\w\-_\. ]", "_", experiment_name)
+    if safe_experiment_name != experiment_name:
+        print(
+            f"Warning: Experiment name sanitized to '{safe_experiment_name}' for directory creation."
+        )
+        experiment_name = safe_experiment_name
+
+    experiment_output_dir = os.path.join(main_output_dir, experiment_name)
+
+    # --- Create Output Directories ---
+    try:
+        os.makedirs(main_output_dir, exist_ok=True)
+        os.makedirs(experiment_output_dir, exist_ok=True)
+        print(f"Ensured output directory exists: '{experiment_output_dir}'")
+    except OSError as e:
+        print(f"Error creating output directories: {e}")
+        return None
+
+    # --- Print Experiment Setup ---
+    print("\n" + "=" * 60)
+    print(f"Starting Reallocation Experiment: '{experiment_name}'")
+    print(f"Reallocating Variable: '{variable_type}' to sector '{target_sector}'")
+    print(f"Target sector fractions to test: {reallocation_fractions}")
+    print(f"Output will be saved in: '{experiment_output_dir}'")
+    print("=" * 60)
+
+    # --- Load Fixed Parameters & Generate Dependent Vars from Config ---
+    T_sim = copy.deepcopy(config.T_sim)
+    L_total = copy.deepcopy(config.L_total)
+    years = np.arange(T_sim + 1)
+
+    # Generate AI adoption curves
+    phi_T_t = config.phi_T_init + (config.phi_T_max - config.phi_T_init) / (
+        1 + np.exp(-config.phi_T_k * (years - config.phi_T_t0))
+    )
+    phi_T_t[0] = config.phi_T_init
+    phi_I_t = config.phi_I_init + (config.phi_I_max - config.phi_I_init) / (
+        1 + np.exp(-config.phi_I_k * (years - config.phi_I_t0))
+    )
+    phi_I_t[0] = config.phi_I_init
+
+    # Load parameter dictionaries
+    initial_conditions = copy.deepcopy(config.initial_conditions)
+    economic_params = copy.deepcopy(config.economic_params)
+    base_production_params = copy.deepcopy(config.base_production_params)
+    labor_mobility_params = copy.deepcopy(config.labor_mobility_params)
+
+    # --- Get baseline totals for the variable type ---
+    if variable_type == "K":
+        baseline_total = (
+            initial_conditions["K_T_0"]
+            + initial_conditions["K_H_0"]
+            + initial_conditions["K_I_0"]
+        )
+        var_keys = ["K_T_0", "K_H_0", "K_I_0"]
+        baseline_values = [initial_conditions[key] for key in var_keys]
+    elif variable_type == "L":
+        # For labor, we only reallocate employed labor (not unemployment)
+        baseline_total = (
+            initial_conditions["L_T_0"]
+            + initial_conditions["L_H_0"]
+            + initial_conditions["L_I_0"]
+        )
+        var_keys = ["L_T_0", "L_H_0", "L_I_0"]
+        baseline_values = [initial_conditions[key] for key in var_keys]
+    elif variable_type == "A":
+        baseline_total = (
+            initial_conditions["A_T_0"]
+            + initial_conditions["A_H_0"]
+            + initial_conditions["A_I_0"]
+        )
+        var_keys = ["A_T_0", "A_H_0", "A_I_0"]
+        baseline_values = [initial_conditions[key] for key in var_keys]
+
+    print(f"Baseline {variable_type} total: {baseline_total:.2f}")
+    print(
+        f"Baseline {variable_type} distribution: T={baseline_values[0]:.2f}, H={baseline_values[1]:.2f}, I={baseline_values[2]:.2f}"
+    )
+    print("-" * 60)
+
+    # --- Run Baseline Simulation ---
+    print("Running Baseline Simulation (using original config values)...")
+    baseline_start_time = time.time()
+    baseline_results = run_single_simulation(
+        T_sim=T_sim,
+        L_total=L_total,
+        initial_conditions=config.initial_conditions,
+        economic_params=config.economic_params,
+        production_params=config.base_production_params,
+        labor_mobility_params=config.labor_mobility_params,
+        phi_T_t=phi_T_t,
+        phi_I_t=phi_I_t,
+        verbose=False,
+    )
+    baseline_end_time = time.time()
+    print(
+        f"Baseline simulation finished in {baseline_end_time - baseline_start_time:.2f} seconds."
+    )
+    print("--- Baseline Final State ---")
+    print(f"  Total Output: {baseline_results['Y_Total'][-1]:.2f}")
+    print(
+        f"  Labor (T, H, I, U): {baseline_results['L_T'][-1]:.1f}, {baseline_results['L_H'][-1]:.1f}, {baseline_results['L_I'][-1]:.1f}, {baseline_results['L_U'][-1]:.1f}"
+    )
+    print(
+        f"  Wages (T, H, I): {baseline_results['MPL_T'][-1]:.3f}, {baseline_results['MPL_H'][-1]:.3f}, {baseline_results['MPL_I'][-1]:.3f}"
+    )
+    print("-" * 28)
+
+    # --- Experiment Execution ---
+    print("\nStarting Reallocation Simulations...")
+    all_results = {}
+    all_results["baseline"] = baseline_results
+    exp_start_time = time.time()
+
+    # Map target sector to index
+    sector_indices = {"T": 0, "H": 1, "I": 2}
+    target_idx = sector_indices[target_sector]
+    other_indices = [i for i in range(3) if i != target_idx]
+
+    for i, target_fraction in enumerate(reallocation_fractions):
+        # Create run label
+        run_label = f"{variable_type}_{target_sector}_frac={target_fraction:.3f}"
+        print(
+            f"\nRunning Simulation {i+1}/{len(reallocation_fractions)}: {run_label}..."
+        )
+
+        # --- Create Deep Copies of Parameter Dictionaries for This Run ---
+        current_initial_conditions = copy.deepcopy(initial_conditions)
+        current_economic_params = copy.deepcopy(economic_params)
+        current_production_params = copy.deepcopy(base_production_params)
+        current_labor_mobility_params = copy.deepcopy(labor_mobility_params)
+
+        # --- Calculate new allocation ---
+        new_values = [0.0, 0.0, 0.0]
+
+        # Set target sector value
+        new_values[target_idx] = baseline_total * target_fraction
+
+        # Distribute remaining among other sectors proportionally to their baseline shares
+        remaining_total = baseline_total * (1 - target_fraction)
+        other_baseline_total = sum(baseline_values[j] for j in other_indices)
+
+        if other_baseline_total > 0:  # Avoid division by zero
+            for j in other_indices:
+                proportion = baseline_values[j] / other_baseline_total
+                new_values[j] = remaining_total * proportion
+        else:
+            # If other sectors had zero baseline, distribute equally
+            for j in other_indices:
+                new_values[j] = remaining_total / len(other_indices)
+
+        # --- Apply new values to initial conditions ---
+        for j, key in enumerate(var_keys):
+            current_initial_conditions[key] = new_values[j]
+
+        print(
+            f"  New {variable_type} allocation: T={new_values[0]:.2f}, H={new_values[1]:.2f}, I={new_values[2]:.2f}"
+        )
+        print(f"  Total: {sum(new_values):.2f} (should equal {baseline_total:.2f})")
+
+        # --- Run the Simulation ---
+        try:
+            simulation_output = run_single_simulation(
+                T_sim=T_sim,
+                L_total=L_total,
+                initial_conditions=current_initial_conditions,
+                economic_params=current_economic_params,
+                production_params=current_production_params,
+                labor_mobility_params=current_labor_mobility_params,
+                phi_T_t=phi_T_t,
+                phi_I_t=phi_I_t,
+                verbose=False,
+            )
+            all_results[run_label] = simulation_output
+            print(
+                f"Finished run {run_label}. Final Total Output: {simulation_output['Y_Total'][-1]:.2f}"
+            )
+        except Exception as e:
+            print(f"  ERROR during simulation run for {run_label}: {e}. Skipping.")
+            continue
+
+    # --- Timing and Completion Message ---
+    exp_end_time = time.time()
+    print("-" * 60)
+    print(
+        f"All reallocation simulations completed in {exp_end_time - exp_start_time:.2f} seconds."
+    )
+    print("-" * 60)
+
+    if do_plots:
+        ####################################
+        # --- Analysis and Visualization ---
+        ####################################
+        if not all_results or len(all_results) <= 1:
+            print("No successful reallocation simulations to plot.")
+            return all_results
+
+        print(f"Generating comparison plots in '{experiment_output_dir}'...")
+        plt.style.use("seaborn-v0_8-darkgrid")
+        plot_param_label = f"{variable_type} to {target_sector} fraction"
+        plot_filename_base = f"realloc_{variable_type}_to_{target_sector}"
+
+        # --- Plot Generation (same plots as regular experiments) ---
+
+        # Plot: Sector Labor Allocations
+        fig_lab, axes_lab = plt.subplots(3, 1, figsize=(8, 10), sharex=True)
+        for run_label, results_data in all_results.items():
+            style = {"marker": ".", "markersize": 5}
+            if run_label == "baseline":
+                style = {
+                    "lw": 2,
+                    "color": "black",
+                    "ls": "--",
+                    "marker": "x",
+                    "markersize": 4,
+                }
+            axes_lab[0].plot(
+                results_data["years"], results_data["L_I"], label=run_label, **style
+            )
+            axes_lab[1].plot(
+                results_data["years"], results_data["L_H"], label=run_label, **style
+            )
+            axes_lab[2].plot(
+                results_data["years"], results_data["L_T"], label=run_label, **style
+            )
+
+        axes_lab[0].set_title(f"Intelligence Sector Labor ($L_I$)")
+        axes_lab[0].set_ylabel("Labor Units ($L_I$)")
+        axes_lab[0].grid(True)
+        axes_lab[1].set_title(f"Human Sector Labor ($L_H$)")
+        axes_lab[1].set_ylabel("Labor Units ($L_H$)")
+        axes_lab[1].grid(True)
+        axes_lab[2].set_title(f"Traditional Sector Labor ($L_T$)")
+        axes_lab[2].set_ylabel("Labor Units ($L_T$)")
+        axes_lab[2].set_xlabel("Year")
+        axes_lab[2].grid(True)
+
+        fig_lab.legend(
+            title=plot_param_label, loc="center left", bbox_to_anchor=(1, 0.5)
+        )
+        fig_lab.suptitle(
+            f'Reallocation Experiment "{experiment_name}": Sector Labor vs. {variable_type} to {target_sector}',
+            fontsize=14,
+        )
+        plt.tight_layout(rect=[0, 0, 0.85, 0.96])
+        plot_path_lab = os.path.join(
+            experiment_output_dir, f"{plot_filename_base}_Labor.png"
+        )
+        plt.savefig(plot_path_lab, bbox_inches="tight")
+        plt.close(fig_lab)
+        print(f"Saved plot: {plot_path_lab}")
+
+        # Plot: Total Output
+        fig_ytot, ax_ytot = plt.subplots(figsize=(8, 4))
+        for run_label, results_data in all_results.items():
+            style = {"marker": ".", "markersize": 5}
+            if run_label == "baseline":
+                style = {
+                    "lw": 2,
+                    "color": "black",
+                    "ls": "--",
+                    "marker": "x",
+                    "markersize": 4,
+                }
+            ax_ytot.plot(
+                results_data["years"], results_data["Y_Total"], label=run_label, **style
+            )
+
+        ax_ytot.set_title(
+            f'Reallocation Experiment "{experiment_name}": Total Output vs. {variable_type} to {target_sector}'
+        )
+        ax_ytot.set_xlabel("Year")
+        ax_ytot.set_ylabel("Total Output")
+        ax_ytot.legend(
+            title=plot_param_label, loc="center left", bbox_to_anchor=(1, 0.5)
+        )
+        ax_ytot.grid(True)
+        plt.tight_layout(rect=[0, 0, 0.85, 1])
+        plot_path_ytot = os.path.join(
+            experiment_output_dir, f"{plot_filename_base}_Y_Total.png"
+        )
+        plt.savefig(plot_path_ytot, bbox_inches="tight")
+        plt.close(fig_ytot)
+        print(f"Saved plot: {plot_path_ytot}")
+
+        # Plot: Sector Wages
+        fig_wages, axes_wages = plt.subplots(3, 1, figsize=(8, 10), sharex=True)
+        for run_label, results_data in all_results.items():
+            style = {"marker": ".", "markersize": 5}
+            if run_label == "baseline":
+                style = {
+                    "lw": 2,
+                    "color": "black",
+                    "ls": "--",
+                    "marker": "x",
+                    "markersize": 4,
+                }
+            axes_wages[0].plot(
+                results_data["years"], results_data["MPL_T"], label=run_label, **style
+            )
+            axes_wages[1].plot(
+                results_data["years"], results_data["MPL_H"], label=run_label, **style
+            )
+            axes_wages[2].plot(
+                results_data["years"], results_data["MPL_I"], label=run_label, **style
+            )
+
+        axes_wages[0].set_title("Traditional Sector Wages ($MPL_T$)")
+        axes_wages[0].set_ylabel("Wage ($MPL_T$)")
+        axes_wages[0].grid(True)
+        axes_wages[1].set_title("Human Sector Wages ($MPL_H$)")
+        axes_wages[1].set_ylabel("Wage ($MPL_H$)")
+        axes_wages[1].grid(True)
+        axes_wages[2].set_title("Intelligence Sector Wages ($MPL_I$)")
+        axes_wages[2].set_ylabel("Wage ($MPL_I$)")
+        axes_wages[2].set_xlabel("Year")
+        axes_wages[2].grid(True)
+
+        fig_wages.legend(
+            title=plot_param_label, loc="center left", bbox_to_anchor=(1, 0.5)
+        )
+        fig_wages.suptitle(
+            f'Reallocation Experiment "{experiment_name}": Sector Wages vs. {variable_type} to {target_sector}',
+            fontsize=14,
+        )
+        plt.tight_layout(rect=[0, 0, 0.85, 0.96])
+        plot_path_wages = os.path.join(
+            experiment_output_dir, f"{plot_filename_base}_Wages.png"
+        )
+        plt.savefig(plot_path_wages, bbox_inches="tight")
+        plt.close(fig_wages)
+        print(f"Saved plot: {plot_path_wages}")
+
+        print(
+            f"\nReallocation Experiment '{experiment_name}' Run and Plotting Complete."
+        )
+
+    # --- Save Results Dictionary ---
+    pickle_filename = os.path.join(
+        experiment_output_dir, f"{plot_filename_base}_results.pkl"
+    )
+    try:
+        with open(pickle_filename, "wb") as f:
+            pickle.dump(all_results, f)
+        print(f"Saved detailed results to {pickle_filename}")
+    except Exception as e:
+        print(f"Error saving results to pickle file '{pickle_filename}': {e}")
+
+    return all_results
+
+
 ##############################
 # --- Main Execution Block ---
 ##############################
@@ -919,13 +1318,14 @@ if __name__ == "__main__":
     sector_I_production_params = True
     sector_H_production_params = True
 
+    # Reallocation experiments
     sector_T_initial_conditions = True
     sector_I_initial_conditions = True
     sector_H_initial_conditions = True
 
-    AI_adoption_params = True
+    AI_adoption_params = True  # Set to False to focus on reallocation experiments
 
-    economic_params = True
+    economic_params = True  # Set to False to focus on reallocation experiments
     labor_mobility_params = True
 
     # Traditional Sector Production Function Parameters
@@ -985,101 +1385,111 @@ if __name__ == "__main__":
             experiment_name="vary_rho_H_outer",
         )
 
-    # Traditional Sector Initial Conditions
+    # === REALLOCATION EXPERIMENTS ===
+    # These experiments reallocate resources between sectors while keeping totals constant
+
+    # Capital (K) Reallocation Experiments
     if sector_T_initial_conditions:
-        # === Experiment: Varying Initial K in Traditional Sector ===
-        original_KT0 = config.initial_conditions[
-            "K_T_0"
-        ]  # Get baseline value for relative changes
-        run_parameter_experiment(
-            param_path_str="initial_conditions['K_T_0']",
-            param_values=np.array(
-                [original_KT0 * 0.6, original_KT0, original_KT0 * 1.5]
-            ),
-            experiment_name="vary_K_T_0",
-        )
-        # === Experiment: Varying Initial L in Traditional Sector ===
-        original_LT0 = config.initial_conditions[
-            "L_T_0"
-        ]  # Get baseline value for relative changes
-        run_parameter_experiment(
-            param_path_str="initial_conditions['L_T_0']",
-            param_values=np.array(
-                [original_LT0 * 0.6, original_LT0, original_LT0 * 1.5]
-            ),
-            experiment_name="vary_L_T_0",
-        )
-        # === Experiment: Varying Initial A in Traditional Sector ===
-        original_AT0 = config.initial_conditions[
-            "A_T_0"
-        ]  # Get baseline value for relative changes
-        run_parameter_experiment(
-            param_path_str="initial_conditions['A_T_0']",
-            param_values=np.array(
-                [original_AT0 * 0.6, original_AT0, original_AT0 * 1.5]
-            ),
-            experiment_name="vary_A_T_0",
+        # Reallocate capital TO Traditional sector
+        run_reallocation_experiment(
+            variable_type="K",
+            target_sector="T",
+            reallocation_fractions=np.array([0.3, 0.4, 0.5, 0.6, 0.7]),
+            experiment_name="realloc_K_to_T",
         )
 
-    # Intelligence Sector Initial Conditions
     if sector_I_initial_conditions:
-        # === Experiment: Varying Initial K in Intelligence Sector ===
-        original_KI0 = config.initial_conditions[
-            "K_I_0"
-        ]  # Get baseline value for relative changes
-        run_parameter_experiment(
-            param_path_str="initial_conditions['K_I_0']",
-            param_values=np.array(
-                [original_KI0 * 0.6, original_KI0, original_KI0 * 1.5]
-            ),
-            experiment_name="vary_K_I_0",
-        )
-        # === Experiment: Varying Initial L in Intelligence Sector ===
-        original_LI0 = config.initial_conditions[
-            "L_I_0"
-        ]  # Get baseline value for relative changes
-        run_parameter_experiment(
-            param_path_str="initial_conditions['L_I_0']",
-            param_values=np.array(
-                [original_LI0 * 0.6, original_LI0, original_LI0 * 1.5]
-            ),
-            experiment_name="vary_L_I_0",
-        )
-        # === Experiment: Varying Initial A in Intelligence Sector ===
-        original_AI0 = config.initial_conditions[
-            "A_I_0"
-        ]  # Get baseline value for relative changes
-        run_parameter_experiment(
-            param_path_str="initial_conditions['A_I_0']",
-            param_values=np.array(
-                [original_AI0 * 0.6, original_AI0, original_AI0 * 1.5]
-            ),
-            experiment_name="vary_A_I_0",
+        # Reallocate capital TO Intelligence sector
+        run_reallocation_experiment(
+            variable_type="K",
+            target_sector="I",
+            reallocation_fractions=np.array([0.1, 0.2, 0.3, 0.4, 0.5]),
+            experiment_name="realloc_K_to_I",
         )
 
-    # Human Sector Initial Conditions
     if sector_H_initial_conditions:
-        # === Experiment: Varying Initial K in Human Sector ===
-        original_KH0 = config.initial_conditions[
-            "K_H_0"
-        ]  # Get baseline value for relative changes
-        run_parameter_experiment(
-            param_path_str="initial_conditions['K_H_0']",
-            param_values=np.array(
-                [original_KH0 * 0.6, original_KH0, original_KH0 * 1.5]
-            ),
-            experiment_name="vary_K_H_0",
+        # Reallocate capital TO Human sector
+        run_reallocation_experiment(
+            variable_type="K",
+            target_sector="H",
+            reallocation_fractions=np.array([0.2, 0.3, 0.4, 0.5, 0.6]),
+            experiment_name="realloc_K_to_H",
         )
-        # === Experiment: Varying Initial L in Human Sector ===
-        original_LH0 = config.initial_conditions[
-            "L_H_0"
-        ]  # Get baseline value for relative changes
+
+    # Labor (L) Reallocation Experiments
+    if sector_T_initial_conditions:
+        # Reallocate labor TO Traditional sector
+        run_reallocation_experiment(
+            variable_type="L",
+            target_sector="T",
+            reallocation_fractions=np.array([0.2, 0.3, 0.4, 0.5, 0.6]),
+            experiment_name="realloc_L_to_T",
+        )
+
+    if sector_I_initial_conditions:
+        # Reallocate labor TO Intelligence sector
+        run_reallocation_experiment(
+            variable_type="L",
+            target_sector="I",
+            reallocation_fractions=np.array([0.2, 0.3, 0.4, 0.5, 0.6]),
+            experiment_name="realloc_L_to_I",
+        )
+
+    if sector_H_initial_conditions:
+        # Reallocate labor TO Human sector
+        run_reallocation_experiment(
+            variable_type="L",
+            target_sector="H",
+            reallocation_fractions=np.array([0.2, 0.3, 0.4, 0.5, 0.6]),
+            experiment_name="realloc_L_to_H",
+        )
+
+    # AI Capital (A) Reallocation Experiments
+    if sector_T_initial_conditions:
+        # Reallocate AI capital TO Traditional sector
+        run_reallocation_experiment(
+            variable_type="A",
+            target_sector="T",
+            reallocation_fractions=np.array([0.4, 0.5, 0.6, 0.7, 0.8]),
+            experiment_name="realloc_A_to_T",
+        )
+
+    if sector_I_initial_conditions:
+        # Reallocate AI capital TO Intelligence sector
+        run_reallocation_experiment(
+            variable_type="A",
+            target_sector="I",
+            reallocation_fractions=np.array([0.3, 0.4, 0.5, 0.6, 0.7]),
+            experiment_name="realloc_A_to_I",
+        )
+
+        # Note: We don't reallocate A to H sector since H has no AI in the baseline model
+
+    # AI Adoption Parameters
+    if AI_adoption_params:
+        # === Experiment: Varying phi_T_max ===
         run_parameter_experiment(
-            param_path_str="initial_conditions['L_H_0']",
-            param_values=np.array(
-                [original_LH0 * 0.6, original_LH0, original_LH0 * 1.5]
-            ),
-            experiment_name="vary_L_H_0",
+            param_path_str="phi_T_max",
+            param_values=np.array([0.5, 0.7, 0.9, 0.95, 0.99]),
+            experiment_name="vary_phi_T_max",
+        )
+        # === Experiment: Varying phi_I_max ===
+        run_parameter_experiment(
+            param_path_str="phi_I_max",
+            param_values=np.array([0.5, 0.7, 0.9, 0.95, 0.99]),
+            experiment_name="vary_phi_I_max",
+        )
+        # === Experiment: Varying phi_T_k (adoption speed) ===
+        run_parameter_experiment(
+            param_path_str="phi_T_k",
+            param_values=np.array([0.3, 0.5, 0.8, 1.0, 1.5]),
+            experiment_name="vary_phi_T_k",
+        )
+        # === Experiment: Varying phi_I_k (adoption speed) ===
+        run_parameter_experiment(
+            param_path_str="phi_I_k",
+            param_values=np.array([0.3, 0.5, 0.8, 1.0, 1.5]),
+            experiment_name="vary_phi_I_k",
         )
 
     # Economic Parameters
