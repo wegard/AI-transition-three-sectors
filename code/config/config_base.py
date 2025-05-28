@@ -59,18 +59,18 @@ base_production_params = {
     "T": {  # Traditional sector (manufacturing, oil, etc.)
         "alpha": 0.60,  # capital share in outer nest (K vs H) – higher (60%) for capital-intensive sector
         "rho_outer": -0.10,  # substitution between K and H; negative ⇒ K and (A,L) are complements
-        "rho_inner": -0.20,  # substitution between AI and labor; slightly negative ⇒ A and L are complements
+        "rho_inner": -0.3,  # substitution between AI and labor; slightly negative ⇒ A and L are complements
         # (Low σ_inner in T reflects limited automation in 2025 – AI augments labor rather than replacing it.)
     },
     "H": {  # Human-centric sector (health, education, etc.)
         "alpha": 0.50,  # capital share ~50% (labor share ~50%) – labor-intensive sector (minimal automation)
         "phi_A_share": 0.0,  # AI share fixed 0 (no AI input in H sector)
-        "rho_outer": -0.1,  # substitution between K and L in H; σ≈0.87 (mild complements)
+        "rho_outer": -0.10,  # substitution between K and L in H; σ≈0.87 (mild complements)
         "rho_inner": 0.0,  # (unused since φ_A_share=0)
     },
     "I": {  # Intelligence sector (tech, ICT, R&D services)
         "alpha": 0.40,  # capital share ~40% (moderate, since both labor and AI are important)
-        "rho_outer": -0.1,  # K vs H substitution in I; complements
+        "rho_outer": -0.10,  # K vs H substitution in I; complements
         "rho_inner": 0.95,  # AI vs labor substitution;
         # (High σ_inner in I means AI can largely substitute for labor as technology advances)
     },
@@ -79,9 +79,9 @@ base_production_params = {
 # --- Labor Mobility Parameters ---
 # Frictions governing movement of labor between sectors and unemployment.
 labor_mobility_params = {
-    "mobility_factor": 0.3,  # fraction of desired sector switches that occur per year (30% mobility rate)
-    "non_movable_fraction": 0.6,  # fraction of workers who cannot switch sectors (structural immobility)
-    "job_finding_rate": 0.90,  # fraction of unemployed finding jobs each year
-    "job_separation_rate": 0.10,  # fraction of employed becoming unemployed per year
+    "mobility_factor": 0.2,  # fraction of desired sector switches that occur per year (30% mobility rate)
+    "non_movable_fraction": 0.7,  # fraction of workers who cannot switch sectors (structural immobility)
+    "job_finding_rate": 0.40,  # fraction of unemployed finding jobs each year
+    "job_separation_rate": 0.029,  # fraction of employed becoming unemployed per year
     "wage_sensitivity": 5.0,  # responsiveness of labor flows to wage differences
 }

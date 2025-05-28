@@ -26,6 +26,7 @@ except ModuleNotFoundError as exc:  # pragma: no cover - required dependency
 from simulation_engine import run_single_simulation
 
 CONFIGS = ["config_noAI", "config_base", "config_high"]
+NAMES_CONFIGS = ["Ingen AI", "Basisbane", "Høy AI addapsjon"]
 CONFIG_MODULE_PREFIX = "config."
 OUTPUT_DIR = os.path.join("../results", "main")
 
@@ -80,24 +81,76 @@ def plot_outputs(all_results):
         print("Matplotlib not available, skipping output plots.")
         return
 
-    fig, axes = plt.subplots(1, 3, figsize=(15, 4), sharey=True)
-    for ax, (name, res) in zip(axes, all_results.items()):
-        ax.plot(res["years"], res["Y_T"], label="Tradisjonell")
-        ax.plot(res["years"], res["Y_H"], label="Menneskelig")
-        ax.plot(res["years"], res["Y_I"], label="Intelligens")
+    # Calculate global min/max for consistent y-axis ranges
+    # Primary axis (sectoral outputs)
+    all_sectoral_outputs = []
+    for res in all_results.values():
+        all_sectoral_outputs.extend([res["Y_T"], res["Y_H"], res["Y_I"]])
+
+    sectoral_min = min(np.min(outputs) for outputs in all_sectoral_outputs)
+    sectoral_max = max(np.max(outputs) for outputs in all_sectoral_outputs)
+
+    # Add some padding
+    sectoral_range = sectoral_max - sectoral_min
+    sectoral_y_min = sectoral_min - 0.05 * sectoral_range
+    sectoral_y_max = sectoral_max + 0.05 * sectoral_range
+
+    # Secondary axis (total output)
+    all_total_outputs = [res["Y_Total"] for res in all_results.values()]
+    total_min = min(np.min(outputs) for outputs in all_total_outputs)
+    total_max = max(np.max(outputs) for outputs in all_total_outputs)
+
+    # Add some padding
+    total_range = total_max - total_min
+    total_y_min = total_min - 0.05 * total_range
+    total_y_max = total_max + 0.05 * total_range
+
+    fig, axes = plt.subplots(1, 3, figsize=(15, 4), sharey=False)
+    for i, (ax, (name, res)) in enumerate(zip(axes, all_results.items())):
+        # Only add labels to the first subplot for the legend
+        if i == 0:
+            ax.plot(res["years"], res["Y_T"], label="Tradisjonell", linewidth=3)
+            ax.plot(res["years"], res["Y_H"], label="Menneskelig", linewidth=3)
+            ax.plot(res["years"], res["Y_I"], label="Intelligens", linewidth=3)
+        else:
+            ax.plot(res["years"], res["Y_T"], linewidth=3)
+            ax.plot(res["years"], res["Y_H"], linewidth=3)
+            ax.plot(res["years"], res["Y_I"], linewidth=3)
+
+        # Set consistent y-axis range for primary axis
+        ax.set_ylim(sectoral_y_min, sectoral_y_max)
 
         # Create secondary axis for total output
         ax2 = ax.twinx()
-        ax2.plot(
-            res["years"], res["Y_Total"], label="Total", linestyle="--", color="black"
-        )
+        if i == 0:
+            ax2.plot(
+                res["years"],
+                res["Y_Total"],
+                label="Total",
+                linestyle="--",
+                color="black",
+            )
+        else:
+            ax2.plot(res["years"], res["Y_Total"], linestyle="--", color="black")
+
+            # Set consistent y-axis range for secondary axis
+        ax2.set_ylim(total_y_min, total_y_max)
+
         if ax is axes[-1]:
             ax2.set_ylabel("Total produksjon")
+        else:
+            # Hide y-axis tick labels on secondary axis for non-rightmost subplots
+            ax2.set_yticklabels([])
 
-        ax.set_title(name)
+        # Use Norwegian names for titles
+        config_index = CONFIGS.index(name)
+        ax.set_title(NAMES_CONFIGS[config_index])
         ax.set_xlabel("År")
         if ax is axes[0]:
             ax.set_ylabel("Sektorproduksjon")
+        else:
+            # Hide y-axis tick labels on primary axis for non-leftmost subplots
+            ax.set_yticklabels([])
         ax.grid(True)
 
     # Primary axis legend
@@ -117,22 +170,73 @@ def plot_labor(all_results):
         print("Matplotlib not available, skipping labor allocation plots.")
         return
 
-    fig, axes = plt.subplots(1, 3, figsize=(15, 4), sharey=True)
-    for ax, (name, res) in zip(axes, all_results.items()):
-        ax.plot(res["years"], res["L_T"], label="L_T")
-        ax.plot(res["years"], res["L_H"], label="L_H")
-        ax.plot(res["years"], res["L_I"], label="L_I")
+    # Calculate global min/max for consistent y-axis ranges
+    # Primary axis (sectoral employment)
+    all_sectoral_employment = []
+    for res in all_results.values():
+        all_sectoral_employment.extend([res["L_T"], res["L_H"], res["L_I"]])
 
-        # Create secondary axis for unemployed labor
+    sectoral_min = min(np.min(employment) for employment in all_sectoral_employment)
+    sectoral_max = max(np.max(employment) for employment in all_sectoral_employment)
+
+    # Add some padding
+    sectoral_range = sectoral_max - sectoral_min
+    sectoral_y_min = sectoral_min - 0.05 * sectoral_range
+    sectoral_y_max = sectoral_max + 0.05 * sectoral_range
+
+    # Secondary axis (unemployment) - fixed range
+    unemployment_y_min = 110000
+    unemployment_y_max = 130000
+
+    fig, axes = plt.subplots(1, 3, figsize=(15, 4), sharey=False)
+    for i, (ax, (name, res)) in enumerate(zip(axes, all_results.items())):
+        # Only add labels to the first subplot for the legend
+        if i == 0:
+            ax.plot(res["years"], res["L_T"], label="L_T", linewidth=3)
+            ax.plot(res["years"], res["L_H"], label="L_H", linewidth=3)
+            ax.plot(res["years"], res["L_I"], label="L_I", linewidth=3)
+        else:
+            ax.plot(res["years"], res["L_T"], linewidth=3)
+            ax.plot(res["years"], res["L_H"], linewidth=3)
+            ax.plot(res["years"], res["L_I"], linewidth=3)
+
+        # Set consistent y-axis range for primary axis
+        ax.set_ylim(sectoral_y_min, sectoral_y_max)
+
+        # Create secondary axis for unemployment
         ax2 = ax.twinx()
-        ax2.plot(res["years"], res["L_U"], label="L_U", color="red", linestyle="--")
+        if i == 0:
+            ax2.plot(
+                res["years"],
+                res["L_U"],
+                label="Arbeidsledige",
+                linestyle=":",
+                color="darkred",
+                alpha=0.5,
+            )
+        else:
+            ax2.plot(
+                res["years"], res["L_U"], linestyle=":", color="darkred", alpha=0.5
+            )
+
+        # Set consistent y-axis range for secondary axis
+        ax2.set_ylim(unemployment_y_min, unemployment_y_max)
+
         if ax is axes[-1]:
             ax2.set_ylabel("Arbeidsledige")
+        else:
+            # Hide y-axis tick labels on secondary axis for non-rightmost subplots
+            ax2.set_yticklabels([])
 
-        ax.set_title(name)
+        # Use Norwegian names for titles
+        config_index = CONFIGS.index(name)
+        ax.set_title(NAMES_CONFIGS[config_index])
         ax.set_xlabel("År")
         if ax is axes[0]:
             ax.set_ylabel("Sysselsatte")
+        else:
+            # Hide y-axis tick labels on primary axis for non-leftmost subplots
+            ax.set_yticklabels([])
         ax.grid(True)
 
     # Primary axis legend
@@ -147,24 +251,105 @@ def plot_labor(all_results):
     plt.close(fig)
 
 
+def plot_wage_levels(all_results):
+    if not HAVE_MPL:
+        print("Matplotlib not available, skipping wage level plots.")
+        return
+
+    # Calculate global min/max for consistent y-axis ranges
+    all_wages = []
+    for res in all_results.values():
+        all_wages.extend([res["MPL_T"], res["MPL_H"], res["MPL_I"]])
+
+    global_min = min(np.min(wages) for wages in all_wages)
+    global_max = max(np.max(wages) for wages in all_wages)
+
+    # Add some padding
+    y_range = global_max - global_min
+    y_min = global_min - 0.05 * y_range
+    y_max = global_max + 0.05 * y_range
+
+    fig, axes = plt.subplots(1, 3, figsize=(15, 4), sharey=False)
+    for i, (ax, (name, res)) in enumerate(zip(axes, all_results.items())):
+        # Only add labels to the first subplot for the legend
+        if i == 0:
+            ax.plot(res["years"], res["MPL_T"], label="w_T", linewidth=3)
+            ax.plot(res["years"], res["MPL_H"], label="w_H", linewidth=3)
+            ax.plot(res["years"], res["MPL_I"], label="w_I", linewidth=3)
+        else:
+            ax.plot(res["years"], res["MPL_T"])
+            ax.plot(res["years"], res["MPL_H"])
+            ax.plot(res["years"], res["MPL_I"])
+
+        # Set consistent y-axis range
+        ax.set_ylim(y_min, y_max)
+
+        # Use Norwegian names for titles
+        config_index = CONFIGS.index(name)
+        ax.set_title(NAMES_CONFIGS[config_index])
+        ax.set_xlabel("År")
+        if ax is axes[0]:
+            ax.set_ylabel("Lønnsnivå")
+        ax.grid(True)
+
+    handles, labels = axes[0].get_legend_handles_labels()
+    fig.legend(handles, labels, loc="upper center", ncol=3)
+    fig.tight_layout(rect=[0, 0, 1, 0.88])
+    fig.savefig(os.path.join(OUTPUT_DIR, "wage_levels.png"), dpi=300)
+    plt.close(fig)
+
+
 def plot_wage_diffs(all_results):
     if not HAVE_MPL:
         print("Matplotlib not available, skipping wage differential plots.")
         return
 
-    fig, axes = plt.subplots(1, 3, figsize=(15, 4), sharey=True)
-    for ax, (name, res) in zip(axes, all_results.items()):
+    # Calculate global min/max for consistent y-axis ranges
+    all_ratios = []
+    for res in all_results.values():
         w_T = res["MPL_T"]
-        ax.plot(
-            res["years"],
-            np.ones_like(w_T),
-            label="w_T / w_T",
-            linestyle="--",
-            color="black",
-        )
-        ax.plot(res["years"], res["MPL_H"] / w_T, label="w_H / w_T")
-        ax.plot(res["years"], res["MPL_I"] / w_T, label="w_I / w_T")
-        ax.set_title(name)
+        all_ratios.extend([np.ones_like(w_T), res["MPL_H"] / w_T, res["MPL_I"] / w_T])
+
+    global_min = min(np.min(ratios) for ratios in all_ratios)
+    global_max = max(np.max(ratios) for ratios in all_ratios)
+
+    # Add some padding
+    y_range = global_max - global_min
+    y_min = global_min - 0.05 * y_range
+    y_max = global_max + 0.05 * y_range
+
+    fig, axes = plt.subplots(1, 3, figsize=(15, 4), sharey=False)
+    for i, (ax, (name, res)) in enumerate(zip(axes, all_results.items())):
+        w_T = res["MPL_T"]
+        # Only add labels to the first subplot for the legend
+        if i == 0:
+            ax.plot(
+                res["years"],
+                np.ones_like(w_T),
+                label="w_T / w_T",
+                linestyle="--",
+                color="black",
+                linewidth=3,
+            )
+            ax.plot(res["years"], res["MPL_H"] / w_T, label="w_H / w_T")
+            ax.plot(res["years"], res["MPL_I"] / w_T, label="w_I / w_T")
+        else:
+            ax.plot(
+                res["years"],
+                np.ones_like(w_T),
+                linestyle="--",
+                color="black",
+                linewidth=3,
+            )
+            ax.plot(res["years"], res["MPL_H"] / w_T)
+            ax.plot(res["years"], res["MPL_I"] / w_T)
+
+        # Set consistent y-axis range
+        ax.set_ylim(y_min, y_max)
+
+        # Use Norwegian names for titles
+        config_index = CONFIGS.index(name)
+        ax.set_title(NAMES_CONFIGS[config_index])
         ax.set_xlabel("År")
         if ax is axes[0]:
             ax.set_ylabel("Relativ lønn")
@@ -208,11 +393,9 @@ def plot_s_curves():
             "-",
             color="forestgreen",
             linewidth=3,
-            label="φ_T (Tradisjonell)",
+            label="φ_T",
         )
-        axes[col].plot(
-            years, phi_I, "--", color="navy", linewidth=3, label="φ_I (Intelligens)"
-        )
+        axes[col].plot(years, phi_I, "--", color="navy", linewidth=3, label="φ_I")
 
         # axes[col].set_title(f"{cfg_name}")
         axes[col].set_xlabel("År")
@@ -220,7 +403,7 @@ def plot_s_curves():
             axes[col].set_ylabel("Automatiseringsnivå")
         axes[col].grid(True)
         axes[col].set_ylim(0, 1)
-        axes[col].legend()
+        axes[col].legend(loc="best")
 
     fig.tight_layout()
     fig.savefig(os.path.join(OUTPUT_DIR, "s_curves.png"), dpi=300)
@@ -229,7 +412,11 @@ def plot_s_curves():
 
 def main():
     if HAVE_MPL:
-        plt.style.use("fivethirtyeight")
+        # plt.style.use("fivethirtyeight")
+        plt.style.use("fast")
+        # plt.style.use("seaborn-whitegrid")
+        # plt.style.use("ggplot")
+
     else:
         print("Matplotlib not installed; skipping all plots.")
 
@@ -239,6 +426,7 @@ def main():
     save_results(all_results)
     plot_outputs(all_results)
     plot_labor(all_results)
+    plot_wage_levels(all_results)
     plot_wage_diffs(all_results)
     plot_s_curves()
 
