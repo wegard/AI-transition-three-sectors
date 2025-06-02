@@ -25,8 +25,8 @@ except ModuleNotFoundError as exc:  # pragma: no cover - required dependency
 
 from simulation_engine import run_single_simulation
 
-CONFIGS = ["config_noAI", "config_base", "config_high"]
-NAMES_CONFIGS = ["Ingen AI", "Basisbane", "Høy AI addapsjon"]
+CONFIGS = ["config_noAI", "config_base"]
+NAMES_CONFIGS = ["Beskjeden AI adaptasjon", "Rask AI adaptasjon"]
 CONFIG_MODULE_PREFIX = "config."
 OUTPUT_DIR = os.path.join("../results", "main")
 
@@ -105,7 +105,16 @@ def plot_outputs(all_results):
     total_y_min = total_min - 0.05 * total_range
     total_y_max = total_max + 0.05 * total_range
 
-    fig, axes = plt.subplots(1, 3, figsize=(15, 4), sharey=False)
+    # Create subplots based on number of scenarios
+    num_scenarios = len(all_results)
+    fig, axes = plt.subplots(
+        1, num_scenarios, figsize=(5 * num_scenarios, 4), sharey=False
+    )
+
+    # Handle case where there's only one subplot
+    if num_scenarios == 1:
+        axes = [axes]
+
     for i, (ax, (name, res)) in enumerate(zip(axes, all_results.items())):
         # Only add labels to the first subplot for the legend
         if i == 0:
@@ -185,10 +194,19 @@ def plot_labor(all_results):
     sectoral_y_max = sectoral_max + 0.05 * sectoral_range
 
     # Secondary axis (unemployment) - fixed range
-    unemployment_y_min = 110000
-    unemployment_y_max = 130000
+    unemployment_y_min = 0
+    unemployment_y_max = 250000
 
-    fig, axes = plt.subplots(1, 3, figsize=(15, 4), sharey=False)
+    # Create subplots based on number of scenarios
+    num_scenarios = len(all_results)
+    fig, axes = plt.subplots(
+        1, num_scenarios, figsize=(5 * num_scenarios, 4), sharey=False
+    )
+
+    # Handle case where there's only one subplot
+    if num_scenarios == 1:
+        axes = [axes]
+
     for i, (ax, (name, res)) in enumerate(zip(axes, all_results.items())):
         # Only add labels to the first subplot for the legend
         if i == 0:
@@ -269,7 +287,16 @@ def plot_wage_levels(all_results):
     y_min = global_min - 0.05 * y_range
     y_max = global_max + 0.05 * y_range
 
-    fig, axes = plt.subplots(1, 3, figsize=(15, 4), sharey=False)
+    # Create subplots based on number of scenarios
+    num_scenarios = len(all_results)
+    fig, axes = plt.subplots(
+        1, num_scenarios, figsize=(5 * num_scenarios, 4), sharey=False
+    )
+
+    # Handle case where there's only one subplot
+    if num_scenarios == 1:
+        axes = [axes]
+
     for i, (ax, (name, res)) in enumerate(zip(axes, all_results.items())):
         # Only add labels to the first subplot for the legend
         if i == 0:
@@ -277,9 +304,9 @@ def plot_wage_levels(all_results):
             ax.plot(res["years"], res["MPL_H"], label="w_H", linewidth=3)
             ax.plot(res["years"], res["MPL_I"], label="w_I", linewidth=3)
         else:
-            ax.plot(res["years"], res["MPL_T"])
-            ax.plot(res["years"], res["MPL_H"])
-            ax.plot(res["years"], res["MPL_I"])
+            ax.plot(res["years"], res["MPL_T"], linewidth=3)
+            ax.plot(res["years"], res["MPL_H"], linewidth=3)
+            ax.plot(res["years"], res["MPL_I"], linewidth=3)
 
         # Set consistent y-axis range
         ax.set_ylim(y_min, y_max)
@@ -318,7 +345,16 @@ def plot_wage_diffs(all_results):
     y_min = global_min - 0.05 * y_range
     y_max = global_max + 0.05 * y_range
 
-    fig, axes = plt.subplots(1, 3, figsize=(15, 4), sharey=False)
+    # Create subplots based on number of scenarios
+    num_scenarios = len(all_results)
+    fig, axes = plt.subplots(
+        1, num_scenarios, figsize=(5 * num_scenarios, 4), sharey=False
+    )
+
+    # Handle case where there's only one subplot
+    if num_scenarios == 1:
+        axes = [axes]
+
     for i, (ax, (name, res)) in enumerate(zip(axes, all_results.items())):
         w_T = res["MPL_T"]
         # Only add labels to the first subplot for the legend
@@ -369,10 +405,10 @@ def plot_s_curves():
 
     # Exclude config_high scenario
     configs_to_plot = [
-        cfg for cfg in CONFIGS if cfg != "config_high" and cfg != "config_noAI"
+        cfg for cfg in CONFIGS if cfg != "config_high"  # and cfg != "config_noAI"
     ]
 
-    fig, axes = plt.subplots(1, len(configs_to_plot), figsize=(6, 4), sharey=True)
+    fig, axes = plt.subplots(1, len(configs_to_plot), figsize=(8, 3), sharey=True)
 
     # Handle case where there's only one subplot
     if len(configs_to_plot) == 1:
@@ -387,23 +423,34 @@ def plot_s_curves():
         phi_I = s_curve(cfg.phi_I_init, cfg.phi_I_max, cfg.phi_I_k, cfg.phi_I_t0, years)
 
         # Plot both sectors in the same subplot
-        axes[col].plot(
-            years,
-            phi_T,
-            "-",
-            color="forestgreen",
-            linewidth=3,
-            label="φ_T",
-        )
-        axes[col].plot(years, phi_I, "--", color="navy", linewidth=3, label="φ_I")
-
-        # axes[col].set_title(f"{cfg_name}")
-        axes[col].set_xlabel("År")
         if col == 0:
-            axes[col].set_ylabel("Automatiseringsnivå")
+            axes[col].plot(
+                years,
+                phi_T,
+                "-",
+                color="forestgreen",
+                linewidth=3,
+                label="φ_T",
+            )
+            axes[col].plot(years, phi_I, "--", color="navy", linewidth=3, label="φ_I")
+        else:
+            axes[col].plot(
+                years,
+                phi_T,
+                "-",
+                color="forestgreen",
+                linewidth=3,
+            )
+            axes[col].plot(years, phi_I, "--", color="navy", linewidth=3)
+
+        # Use Norwegian names for titles
+        config_index = CONFIGS.index(cfg_name)
+        axes[col].set_title(NAMES_CONFIGS[config_index])
+        axes[col].set_xlabel("År")
         axes[col].grid(True)
-        axes[col].set_ylim(0, 1)
-        axes[col].legend(loc="best")
+        axes[col].set_ylim(-0.1, 1.1)
+        if col == 0:
+            axes[col].legend(loc="best")
 
     fig.tight_layout()
     fig.savefig(os.path.join(OUTPUT_DIR, "s_curves.png"), dpi=300)
