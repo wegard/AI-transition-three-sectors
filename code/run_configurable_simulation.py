@@ -395,10 +395,13 @@ def main():
     print("Generating and Saving Plots...")
     plt.style.use("seaborn-v0_8-darkgrid")
 
-    # Create a directory for plots named after the config
-    plot_dir = f"../results/plots/plots_{config_name}"
+    # Create a directory for plots named after the config (robust absolute path)
+    _BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    plot_dir = os.path.normpath(
+        os.path.join(_BASE_DIR, "..", "results", "plots", f"plots_{config_name}")
+    )
     if not os.path.exists(plot_dir):
-        os.makedirs(plot_dir)
+        os.makedirs(plot_dir, exist_ok=True)
 
     # Plot 0: Total Output
     plt.figure(figsize=(6, 3))

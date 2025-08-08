@@ -1,13 +1,13 @@
 # Calibration for Norway 2025 (Three-Sector Model)
 
 # --- Simulation Settings ---
-T_sim = 20  # simulate 15 years (2025–2040)
+T_sim = 20  # simulate 20 years (2025–2045)
 L_total = 3000000.0  # total labor force ≈ 3.0 million in 2025
 
 # --- AI Adoption (S-curve) Parameters ---
 # Logistic adoption curves for AI share (phi) in Traditional and Intelligence sectors.
 # phi(t) = phi_init + (phi_max - phi_init) / (1 + exp[-k*(t - t0)])
-phi_T_max = 0.7  # max AI share in T (80% long-run automation potential)
+phi_T_max = 0.7  # max AI share in T (70% long-run automation potential)
 phi_T_k = 0.50  # S-curve steepness for T (moderate adoption speed)
 phi_T_t0 = 12  # inflection point year for T
 phi_T_init = 0.05  # initial AI share in T (5% in 2025)
@@ -57,15 +57,15 @@ economic_params = {
 #    rho > 0 ⇒ σ>1 (substitutes)
 base_production_params = {
     "T": {  # Traditional sector (manufacturing, oil, etc.)
-        "alpha": 0.35,  # capital share in outer nest (K vs H) – higher (60%) for capital-intensive sector
-        "rho_outer": -0.25,  # substitution between K and H; negative ⇒ K and (A,L) are complements
-        "rho_inner": 0.33,  # substitution between AI and labor; slightly negative ⇒ A and L are complements
-        # (Low σ_inner in T reflects limited automation in 2025 – AI augments labor rather than replacing it.)
+        "alpha": 0.35,  # capital share in outer nest (K vs H) – higher for capital-intensive sector
+        "rho_outer": -0.25,  # substitution between K and H; negative ⇒ complements
+        "rho_inner": 0.33,  # substitution between AI and labor; >0 ⇒ some substitutability
+        # (Low σ_inner in T reflects limited automation in 2025; AI augments labor more than replacing it.)
     },
     "H": {  # Human-centric sector (health, education, etc.)
-        "alpha": 0.25,  # capital share ~50% (labor share ~50%) – labor-intensive sector (minimal automation)
+        "alpha": 0.25,  # labor-intensive sector (minimal automation)
         "phi_A_share": 0.0,  # AI share fixed 0 (no AI input in H sector)
-        "rho_outer": -0.40,  # substitution between K and L in H; σ≈0.87 (mild complements)
+        "rho_outer": -0.40,  # substitution between K and L in H; mild complements
         "rho_inner": 0.0,  # (unused since φ_A_share=0)
     },
     "I": {  # Intelligence sector (tech, ICT, R&D services)

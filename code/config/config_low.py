@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # Low variant configuration for Norway
-# Inherits from base_norway and allows parameter adjustments
+# Inherits from base config and allows parameter adjustments
 
 # Import base configuration
 from config.config_base import *
@@ -43,7 +43,7 @@ def get_adjusted_parameters():
 
 
 # Parameter adjustments for low scenario:
-set_parameter("s_A", 0.05)  # Lower AI investment rate
+set_parameter("economic_params.s_A", 0.05)  # Lower AI investment rate
 # set_parameter("phi_I_t0", 12)  # Later inflection point for AI adoption in Intelligence sector
 # set_parameter("phi_T_max", 0.70)  # Lower maximum AI share in Traditional sector
 # set_parameter("phi_I_max", 0.80)  # Lower maximum AI share in Intelligence sector

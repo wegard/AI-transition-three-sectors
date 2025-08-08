@@ -8,6 +8,7 @@ and wage differentials. Output is saved in ``results/main``.
 
 import os
 import importlib
+import sys
 
 try:
     import matplotlib.pyplot as plt
@@ -27,7 +28,12 @@ from simulation_engine import run_single_simulation
 
 CONFIGS = ["config_noAI", "config_base", "config_high"]
 CONFIG_MODULE_PREFIX = "config."
-OUTPUT_DIR = os.path.join("../results", "main")
+# Resolve output directory relative to this file for robustness
+_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# Ensure local imports work regardless of current working directory
+if _BASE_DIR not in sys.path:
+    sys.path.insert(0, _BASE_DIR)
+OUTPUT_DIR = os.path.normpath(os.path.join(_BASE_DIR, "..", "results", "main"))
 
 
 def load_config(name):
@@ -65,7 +71,7 @@ def run_scenario(cfg_name):
 
 def ensure_output_dir():
     if not os.path.exists(OUTPUT_DIR):
-        os.makedirs(OUTPUT_DIR)
+        os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 
 def save_results(all_results):
@@ -81,6 +87,7 @@ def plot_outputs(all_results):
         return
 
     fig, axes = plt.subplots(1, 3, figsize=(15, 4), sharey=True)
+    twin_axes = []
     for ax, (name, res) in zip(axes, all_results.items()):
         ax.plot(res["years"], res["Y_T"], label="Traditional")
         ax.plot(res["years"], res["Y_H"], label="Human")
@@ -88,6 +95,7 @@ def plot_outputs(all_results):
 
         # Create secondary axis for total output
         ax2 = ax.twinx()
+        twin_axes.append(ax2)
         ax2.plot(
             res["years"], res["Y_Total"], label="Total", linestyle="--", color="black"
         )
@@ -102,8 +110,8 @@ def plot_outputs(all_results):
 
     # Primary axis legend
     handles1, labels1 = axes[0].get_legend_handles_labels()
-    # Secondary axis legend
-    handles2, labels2 = axes[0].get_figure().axes[1].get_legend_handles_labels()
+    # Secondary axis legend from the twin of the first subplot
+    handles2, labels2 = twin_axes[0].get_legend_handles_labels()
     # Combine legends
     fig.legend(handles1 + handles2, labels1 + labels2, loc="upper center", ncol=4)
 
@@ -118,6 +126,7 @@ def plot_labor(all_results):
         return
 
     fig, axes = plt.subplots(1, 3, figsize=(15, 4), sharey=True)
+    twin_axes = []
     for ax, (name, res) in zip(axes, all_results.items()):
         ax.plot(res["years"], res["L_T"], label="L_T")
         ax.plot(res["years"], res["L_H"], label="L_H")
@@ -125,6 +134,7 @@ def plot_labor(all_results):
 
         # Create secondary axis for unemployed labor
         ax2 = ax.twinx()
+        twin_axes.append(ax2)
         ax2.plot(res["years"], res["L_U"], label="L_U", color="red", linestyle="--")
         if ax is axes[-1]:
             ax2.set_ylabel("Unemployed Labor")
@@ -137,8 +147,8 @@ def plot_labor(all_results):
 
     # Primary axis legend
     handles1, labels1 = axes[0].get_legend_handles_labels()
-    # Secondary axis legend
-    handles2, labels2 = axes[0].get_figure().axes[1].get_legend_handles_labels()
+    # Secondary axis legend from the twin of the first subplot
+    handles2, labels2 = twin_axes[0].get_legend_handles_labels()
     # Combine legends
     fig.legend(handles1 + handles2, labels1 + labels2, loc="upper center", ncol=4)
 

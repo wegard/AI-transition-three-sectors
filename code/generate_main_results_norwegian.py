@@ -8,6 +8,7 @@ and wage differentials. Output is saved in ``results/main``.
 
 import os
 import importlib
+import sys
 
 try:
     import matplotlib.pyplot as plt
@@ -28,7 +29,12 @@ from simulation_engine import run_single_simulation
 CONFIGS = ["config_noAI", "config_base"]
 NAMES_CONFIGS = ["Beskjeden AI adaptasjon", "Rask AI adaptasjon"]
 CONFIG_MODULE_PREFIX = "config."
-OUTPUT_DIR = os.path.join("../results", "main")
+# Resolve output directory relative to this file for robustness
+_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# Ensure local imports work regardless of current working directory
+if _BASE_DIR not in sys.path:
+    sys.path.insert(0, _BASE_DIR)
+OUTPUT_DIR = os.path.normpath(os.path.join(_BASE_DIR, "..", "results", "main"))
 
 
 def load_config(name):
@@ -66,7 +72,7 @@ def run_scenario(cfg_name):
 
 def ensure_output_dir():
     if not os.path.exists(OUTPUT_DIR):
-        os.makedirs(OUTPUT_DIR)
+        os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 
 def save_results(all_results):
@@ -115,6 +121,7 @@ def plot_outputs(all_results):
     if num_scenarios == 1:
         axes = [axes]
 
+    twin_axes = []
     for i, (ax, (name, res)) in enumerate(zip(axes, all_results.items())):
         # Only add labels to the first subplot for the legend
         if i == 0:
@@ -131,6 +138,7 @@ def plot_outputs(all_results):
 
         # Create secondary axis for total output
         ax2 = ax.twinx()
+        twin_axes.append(ax2)
         if i == 0:
             ax2.plot(
                 res["years"],
@@ -164,8 +172,8 @@ def plot_outputs(all_results):
 
     # Primary axis legend
     handles1, labels1 = axes[0].get_legend_handles_labels()
-    # Secondary axis legend
-    handles2, labels2 = axes[0].get_figure().axes[1].get_legend_handles_labels()
+    # Secondary axis legend from the twin of the first subplot
+    handles2, labels2 = twin_axes[0].get_legend_handles_labels()
     # Combine legends
     fig.legend(handles1 + handles2, labels1 + labels2, loc="upper center", ncol=4)
 
@@ -207,6 +215,7 @@ def plot_labor(all_results):
     if num_scenarios == 1:
         axes = [axes]
 
+    twin_axes = []
     for i, (ax, (name, res)) in enumerate(zip(axes, all_results.items())):
         # Only add labels to the first subplot for the legend
         if i == 0:
@@ -223,6 +232,7 @@ def plot_labor(all_results):
 
         # Create secondary axis for unemployment
         ax2 = ax.twinx()
+        twin_axes.append(ax2)
         if i == 0:
             ax2.plot(
                 res["years"],
@@ -259,8 +269,8 @@ def plot_labor(all_results):
 
     # Primary axis legend
     handles1, labels1 = axes[0].get_legend_handles_labels()
-    # Secondary axis legend
-    handles2, labels2 = axes[0].get_figure().axes[1].get_legend_handles_labels()
+    # Secondary axis legend from the twin of the first subplot
+    handles2, labels2 = twin_axes[0].get_legend_handles_labels()
     # Combine legends
     fig.legend(handles1 + handles2, labels1 + labels2, loc="upper center", ncol=4)
 
